@@ -9,6 +9,6 @@ directory structure:
 * keys/oldKeyLists: containing prior keylists. 
 
 TODO:
-non-verbose mode (dump most printing to errorlog)
+extend non-verbose mode?
 figure out paths from argvs in hostListMaker
 give updateHosts a way to take in a new host list
