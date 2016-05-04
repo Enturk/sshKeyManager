@@ -6,7 +6,7 @@ date +"%Y_%m_%d" >> $LOGFILE
 # get hosts from internal file, and then ssh-keyscan each one of them
 cat keys/sample.txt | while read line; do 
     hostName=`echo $line | awk -F' ' '{print $1}' | awk -F',' '{print $2}'` #will give all host names in the key file
-    echo "checking $hostName"
+    # echo "Checking $hostName"
     keyInfo=`ssh-keyscan $hostName 2>>$LOGFILE | awk -F' ' '{print $2,$3}'` #will grab all key types and public keys
     
     #check if hostname file already esists, if not, create it 
@@ -16,9 +16,13 @@ cat keys/sample.txt | while read line; do
     if [ "$(< hosts/$hostName)" != "$keyInfo" -a -n "$keyInfo" ] ; then # 0 if true
         # write changes to a new file
         echo -n "$keyInfo" > hosts/${hostName}.changed
-        # TODO log actions
+        # maybe TODO log actions?
         
         echo $hostName is different from our info. | tee -a $LOGFILE
+    else
+        #overwrite old info to file
+        echo "Keeping old key file for $hostname because no response from network."
+        echo $line | awk -F',' '{print $NF}' | awk -F' ' '{print $2,$3}' > hosts/${hostName}
     fi
 done
 
@@ -36,10 +40,11 @@ else
         #TODO log actions
         ls keys/updated_keys*
         mv keys/updated_keys* keys/oldKeylists/ # move old key file
+        oldlist=$(ls -dt keys/oldKeylists/* | head -1)
         newlist=keys/updated_keys_`date +"%Y_%m_%d"`
         touch $newlist
 
         # TODO run python script to dump info into that file
-        exec python hostListMaker.py $newlist
+        exec python hostListMaker.py $newlist $oldlist
     fi
 fi
