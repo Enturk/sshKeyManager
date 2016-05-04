@@ -34,7 +34,6 @@ for file in hostlist:
                 host = line[0:line.find(" ")]
         
         # write the info
-        print host
         NewHostList.write(host+" "+content+"\n")
         if verbose: print "Updated: "+file
         else: errorlog.write("Updated: "+file+" in "+hostfilename)
