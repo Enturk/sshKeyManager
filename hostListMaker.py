@@ -4,26 +4,33 @@
 from sys import argv
 import os
 import socket
+import re
 hostfilename = argv[1] #alternative filenaming mechanism, better because passed by prior script
 
 NewHostList = open(hostfilename, "a")
-path = "./hosts/keys/"
+hostspath = "./hosts/"
+keyspath = "./keys/"
+
+# errorlog = open("errorlog", "a")
 
 # append all the correct codes 
-hostlist = os.listdir(path)
+hostlist = os.listdir(hostspath)
 for file in hostlist:
     try:
         ip = socket.gethostbyname(file)
-        content = open(path+file,"r").read()
+        content = open(hostspath+file,"r").read()
         content.replace(" ",",")
         NewHostList.write(ip+","+file+","+content+"\n")
+        print "Updated: "+file
     except socket.gaierror:
-        # host-not-available actions:
-        print file+" not found on the network, ignoring it." # should we skip this step? It might be as fast this way.
         # keep old host info
-        # should this be implemented? best to ask? Maybe  a cutoff date?
-
-# print "Here's your file %r:" % NewHostList
-# print NewHostList.read()
+        OldHostList = open(argv[2], "r")
+        for line in OldHostList:
+            if file in line:
+                print file+" not found on the network, keeping old info in updated list."
+                NewHostList.write(line)
+        OldHostList.close()
+        
+# if argv[2] != "": print "Here's your file %r:" % NewHostList
 
 NewHostList.close()
