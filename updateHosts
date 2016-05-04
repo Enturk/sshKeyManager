@@ -21,7 +21,7 @@ cat keys/sample.txt | while read line; do
         echo $hostName is different from our info. | tee -a $LOGFILE
     else
         #overwrite old info to file
-        echo "Keeping old key file for $hostname because no response from network."
+        echo "Keeping old key file for $hostName because no response from network."
         echo $line | awk -F',' '{print $NF}' | awk -F' ' '{print $2,$3}' > hosts/${hostName}
     fi
 done
@@ -38,13 +38,12 @@ else
         done
         
         #TODO log actions
-        ls keys/updated_keys*
         mv keys/updated_keys* keys/oldKeylists/ # move old key file
         oldlist=$(ls -dt keys/oldKeylists/* | head -1)
         newlist=keys/updated_keys_`date +"%Y_%m_%d"`
         touch $newlist
 
-        # TODO run python script to dump info into that file
+        # run python script to dump info into that file
         exec python hostListMaker.py $newlist $oldlist
     fi
 fi
