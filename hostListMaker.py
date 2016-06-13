@@ -7,7 +7,7 @@ import socket
 import re
 hostfilename = argv[1] #alternative filenaming mechanism, better because passed by prior script
 
-NewHostList = open(hostfilename, "a")
+NewHostList = open(hostfilename, "w")
 hostspath = "./hosts/"
 keyspath = "./keys/"
 verbose = True
@@ -27,6 +27,7 @@ for file in hostlist:
         
         # get host info including aliases
         host = ""
+        # pull nis or dns info here
         OldHostList = open(argv[2], "r")
         for line in OldHostList:
             if file in line:
@@ -39,6 +40,7 @@ for file in hostlist:
         else: errorlog.write("Updated: "+file+" in "+hostfilename)
         
     except socket.gaierror:
+        # alert the bosses and then eliminate the rest of this when nis is properly coded
         
         # keep old host info
         OldHostList = open(argv[2], "r")
