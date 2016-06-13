@@ -2,9 +2,17 @@
 LOGFILE=errorlog # change to /dev/null if unwanted
 date +"%Y_%m_%d" >> $LOGFILE
 
+FILE=NewKeys.txt
+
+if [ -e keys/$FILE ]; then
+   echo "Using $FILE file as key source."
+else
+   echo "No $FILE source, so working off of last updated_keys."
+   $FILE=updated_keys*
+fi
 
 # get hosts from internal file, and then ssh-keyscan each one of them
-cat keys/sample.txt | while read line; do 
+cat keys/$FILE | while read line; do 
     hostName=`echo $line | awk -F' ' '{print $1}' | awk -F',' '{print $2}'` #will give all host names in the key file
     # echo "Checking $hostName"
     keyInfo=`ssh-keyscan $hostName 2>>$LOGFILE | awk -F' ' '{print $2,$3}'` #will grab all key types and public keys
@@ -24,16 +32,21 @@ cat keys/sample.txt | while read line; do
         echo "Keeping old key file for $hostName because no response from network."
         echo $line | awk -F',' '{print $NF}' | awk -F' ' '{print $2,$3}' > hosts/${hostName}
     fi
+    
+    # get aliases
+    # dig @mydnsserver $hostname axfr |grep CNAME |grep server1 # what is our DNS server and 
 done
 
 if [ \! -e hosts/*.changed ] ; then
-    echo 'No changes detected, doc. List NOT updated.'
+    echo 'No changes detected, doc. List NOT updated. Key source not updated and remains in place.'
 else
     echo 'Hey, YOU! Commit dem changes? [Y/N]'
     read answer
     if [ $answer =  'Y' -o $answer = 'y' ] ; then
         for filename in hosts/*.changed 
         do
+            # TODO make user choose host by host
+
             mv ${filename} ${filename%%.changed} # why does this look at t5120-hw-etc...?
         done
         
@@ -41,8 +54,13 @@ else
         mv keys/updated_keys* keys/oldKeylists/ # move old key file
         oldlist=$(ls -dt keys/oldKeylists/* | head -1)
         newlist=keys/updated_keys_`date +"%Y_%m_%d"`
-        touch $newlist
-
+        # touch $newlist # TODO move this job to the hostListMaker
+        
+        # move NewKeys file to storage
+        if $FILE=NewKeys.txt; then
+            mv keys/$FILE keys/oldKeylists/NewKeys_`date +"%Y_%m_%d"`
+        fi
+        
         # run python script to dump info into that file
         exec python hostListMaker.py $newlist $oldlist
     fi
